@@ -39,6 +39,19 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_message))
     
+    import os
+from telegram.ext import ApplicationBuilder
+
+# ... (الكود الحالي الخاص بك)
+
+if __name__ == '__main__':
+    # إعداد البوت مع متغير البيئة
+    application = ApplicationBuilder().token(os.getenv("TOKEN")).build()
+    
+    # ربط المنفذ (مطلوب لـ Render)
+    port = int(os.environ.get("PORT", 5000))
+    application.run_polling(port=port, webhook_url=None)
+    
     # بدء البوت
     application.run_polling()
 
