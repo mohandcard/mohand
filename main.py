@@ -1,76 +1,66 @@
 import os
 import logging
 from telegram import Update
-from telegram.ext import
-import asyncio
-from threading import Thread
-
-def keep_alive():
-    """تشغيل وظيفة الخلفية لإبقاء البوت نشطًا"""
-    Thread(target=run_async).start()
-
-def run_async():
-    """تشغيل الحلقة غير المتزامنة"""
-    asyncio.run(keep_running())
-
-async def keep_running():
-    """إرسال نبضات حياة كل 5 دقائق"""
-    while True:
-        await asyncio.sleep(300)
-        print("🟢 البوت لا يزال يعمل...")
-
-(
+from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
     MessageHandler,
     filters,
     CallbackContext
 )
+from flask import Flask
 
-# إعداد التسجيل
+# --- إعداد خادم ويب لإبقاء البوت نشطًا ---
+server = Flask(__name__)
+
+@server.route('/')
+def ping():
+    return "Bot is running!"
+
+def keep_alive():
+    import threading
+    threading.Thread(target=lambda: server.run(host='0.0.0.0', port=8080)).start()
+
+# --- إعداد البوت ---
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-logger = logging.getLogger(__name__)
 
-# الكلمات الممنوعة
-BANNED_WORDS = ["ارسيل", "واتساب"]
+BANNED_WORDS = ["سب", "قذف", "إهانة"]  # الكلمات الممنوعة (يمكنك تعديلها)
 
-async def start(update: Update, context: CallbackContext):
-    await update.message.reply_text('مرحبًا! أنا بوت إدارة المجموعات.')
+async def alert_admins(update: Update, context: CallbackContext, word: str):
+    chat = await update.effective_chat.get_administrators()
+    for admin in chat:
+        try:
+            await context.bot.send_message(
+                chat_id=admin.user.id,
+                text=f"⚠️ تنبيه: كلمة ممنوعة\n\nالمستخدم: {update.message.from_user.mention_html()}\nالكلمة: {word}\nرابط الرسالة: {update.message.link}"
+            )
+        except Exception as e:
+            logging.error(f"فشل في إرسال التنبيه: {e}")
 
-async def check_message(update: Update, context: CallbackContext):
-    if update.message.chat.type in ['group', 'supergroup']:
+async def handle_message(update: Update, context: CallbackContext):
+    if update.message.chat.type in ["group", "supergroup"]:
         text = update.message.text.lower() if update.message.text else ""
-        found_words = [word for word in BANNED_WORDS if word.lower() in text]
-        
-        if found_words:
-            admins = await update.effective_chat.get_administrators()
-            for admin in admins:
-                try:
-                    await context.bot.send_message(
-                        chat_id=admin.user.id,
-                        text=f"⚠️ تنبيه: تم اكتشاف كلمة ممنوعة\n\nالمستخدم: {update.message.from_user.mention_html()}\nالكلمات: {', '.join(found_words)}"
-                    )
-                except Exception as e:
-                    logger.error(f"فشل في إرسال التنبيه: {e}")
+        for word in BANNED_WORDS:
+            if word in text:
+                await alert_admins(update, context, word)
+                break
 
 def main():
-    # الحصول على التوكن من متغيرات البيئة
+    keep_alive()  # بدء خادم الويب
+    
     token = os.getenv("TOKEN")
     if not token:
-        logger.error("لم يتم تعيين TOKEN في متغيرات البيئة!")
+        logging.error("لم يتم تعيين TOKEN!")
         return
 
-    # بناء التطبيق
     application = ApplicationBuilder().token(token).build()
     
-    # إضافة المعالجات
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_message))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(CommandHandler("start", lambda u,c: u.message.reply_text("✅ البوت يعمل!")))
     
-    # تشغيل البوت
     application.run_polling()
 
 if __name__ == '__main__':
