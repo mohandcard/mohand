@@ -1,7 +1,25 @@
 import os
 import logging
 from telegram import Update
-from telegram.ext import (
+from telegram.ext import
+import asyncio
+from threading import Thread
+
+def keep_alive():
+    """تشغيل وظيفة الخلفية لإبقاء البوت نشطًا"""
+    Thread(target=run_async).start()
+
+def run_async():
+    """تشغيل الحلقة غير المتزامنة"""
+    asyncio.run(keep_running())
+
+async def keep_running():
+    """إرسال نبضات حياة كل 5 دقائق"""
+    while True:
+        await asyncio.sleep(300)
+        print("🟢 البوت لا يزال يعمل...")
+
+(
     ApplicationBuilder,
     CommandHandler,
     MessageHandler,
