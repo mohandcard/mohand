@@ -52,9 +52,8 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_message))
     
-    # تشغيل البوت مع ربط المنفذ
-    port = int(os.environ.get("PORT", 5000))
-    application.run_polling(port=port)
+    # تشغيل البوت
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
