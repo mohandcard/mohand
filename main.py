@@ -40,7 +40,7 @@ async def check_message(update: Update, context: CallbackContext):
 
 def main():
     # الحصول على التوكن من متغير البيئة
-    token = os.getenv("TOKEN")
+    token = os.getenv("7525090362:AAHXJptSLUjMBcAOXA6mn88X44BNlSMUyyE")
     if not token:
         logger.error("لم يتم تعيين TOKEN في متغيرات البيئة!")
         return
