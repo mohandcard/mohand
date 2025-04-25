@@ -1,6 +1,13 @@
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
-from telegram import Update
+import os
 import logging
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    filters,
+    CallbackContext
+)
 
 # إعداد التسجيل
 logging.basicConfig(
@@ -32,27 +39,20 @@ async def check_message(update: Update, context: CallbackContext):
                     logger.error(f"فشل في إرسال التنبيه: {e}")
 
 def main():
-    # استبدل TOKEN بمتغير البيئة
-    application = Application.builder().token("7525090362:AAHXJptSLUjMBcAOXA6mn88X44BNlSMUyyE").build()
+    # الحصول على التوكن من متغير البيئة
+    token = os.getenv("TOKEN")
+    if not token:
+        logger.error("لم يتم تعيين TOKEN في متغيرات البيئة!")
+        return
+
+    # بناء التطبيق
+    application = ApplicationBuilder().token(token).build()
     
     # إضافة المعالجات
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_message))
     
-    import os
-from telegram.ext import ApplicationBuilder
-
-# ... (الكود الحالي الخاص بك)
-
-if __name__ == '__main__':
-    # إعداد البوت مع متغير البيئة
-    application = ApplicationBuilder().token(os.getenv("TOKEN")).build()
-    
-    # ربط المنفذ (مطلوب لـ Render)
-    port = int(os.environ.get("PORT", 5000))
-    application.run_polling(port=port, webhook_url=None)
-    
-    # بدء البوت
+    # تشغيل البوت
     application.run_polling()
 
 if __name__ == '__main__':
