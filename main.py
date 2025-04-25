@@ -39,8 +39,8 @@ async def check_message(update: Update, context: CallbackContext):
                     logger.error(f"فشل في إرسال التنبيه: {e}")
 
 def main():
-    # الحصول على التوكن من متغير البيئة
-    token = os.getenv("7525090362:AAHXJptSLUjMBcAOXA6mn88X44BNlSMUyyE")
+    # الحصول على التوكن من متغيرات البيئة
+    token = os.getenv("TOKEN")
     if not token:
         logger.error("لم يتم تعيين TOKEN في متغيرات البيئة!")
         return
@@ -52,8 +52,9 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_message))
     
-    # تشغيل البوت
-    application.run_polling()
+    # تشغيل البوت مع ربط المنفذ
+    port = int(os.environ.get("PORT", 5000))
+    application.run_polling(port=port)
 
 if __name__ == '__main__':
     main()
