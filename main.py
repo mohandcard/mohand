@@ -1,8 +1,8 @@
 
 import logging
 from telegram import Update, ChatMember
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
-
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext
+# لاحظ تغيير 'Filters' إلى 'filters' (بحرف صغير)
 # تكوين التسجيل
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
